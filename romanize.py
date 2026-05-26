@@ -57,6 +57,14 @@ OVERRIDE = {
     'ณัฐพล':      'Nattaphon',
     'ธีรวัฒน์':   'Thirawat',
     'ศุภวัฒน์':   'Suppawat',
+    # กมล compounds (rule engine parses กมล wrong: Komol instead of Kamon)
+    'กมลชนก':     'Kamonchanok',
+    'กมล':        'Kamon',
+    'ชนก':        'Chanok',
+    'กมลวรรณ':    'Kamonwan',
+    'กมลรัตน์':   'Kamonrat',
+    'กมลพร':      'Kamonporn',
+    'กมลนาถ':     'Kamonnat',
     # Common name parts that rule engine struggles with
     'มานพ':       'Manop',
     'วุฒิ':       'Wutthi',
