@@ -30,6 +30,9 @@ const OVERRIDE = {
   'วงศ์สถาพร':'Wongsaphat','วงศ์สาทร':'Wongsathon','กิตสะดาพร':'Kitsadaporn',
   'พงศ์ภิภัทร':'Phongphiphat','ณัฐภัทร':'Nattaphat','ณัฐพล':'Nattaphon',
   'ธีรวัฒน์':'Thirawat','ศุภวัฒน์':'Suppawat',
+  // กมล compounds
+  'กมลชนก':'Kamonchanok','กมล':'Kamon','ชนก':'Chanok',
+  'กมลวรรณ':'Kamonwan','กมลรัตน์':'Kamonrat','กมลพร':'Kamonporn','กมลนาถ':'Kamonnat',
   'มานพ':'Manop','วุฒิ':'Wutthi','วุฒิกร':'Wutthikorn',
   'วุฒิเดช':'Wutthidet','วุฒิชัย':'Wutthichai','วุฒิไกร':'Wutthikrai',
   'วุฒิพงษ์':'Wutthiphong','วุฒิพล':'Wutthiphon',
