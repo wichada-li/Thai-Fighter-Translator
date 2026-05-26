@@ -21,7 +21,8 @@ const MIME = {
 };
 
 // ── Spawn Python romanize server ─────────────────────────────────
-const py = spawn('python', [path.join(__dirname, 'romanize.py')], {
+const PYTHON  = process.platform === 'win32' ? 'python' : 'python3';
+const py = spawn(PYTHON, [path.join(__dirname, 'romanize.py')], {
   stdio: ['ignore', 'pipe', 'pipe'],
   env: { ...process.env, PYTHONIOENCODING: 'utf-8' }
 });
