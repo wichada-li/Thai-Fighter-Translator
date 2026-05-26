@@ -8,7 +8,7 @@ const fs    = require('fs');
 const path  = require('path');
 const { spawn } = require('child_process');
 
-const PORT    = 3000;
+const PORT    = process.env.PORT || 3000;
 const PY_PORT = 3001;
 
 const MIME = {
