@@ -1,15 +1,13 @@
 /**
  * server.js — Claude Cowork v.2
- * Starts Python romanize.py on port 3001, serves index.html on port 3000
+ * Calls romanize.py per-request (execFile) — works on Railway without persistent Python server
  */
 const http  = require('http');
-const https = require('https');
 const fs    = require('fs');
 const path  = require('path');
-const { spawn } = require('child_process');
+const { execFile } = require('child_process');
 
-const PORT    = process.env.PORT || 3000;
-const PY_PORT = 3001;
+const PORT = process.env.PORT || 3000;
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -20,84 +18,67 @@ const MIME = {
   '.png' : 'image/png',
 };
 
-// ── Spawn Python romanize server ─────────────────────────────────
-// Try different python paths for cross-platform compatibility
+// Find Python executable
 const PYTHON_CANDIDATES = process.platform === 'win32'
   ? ['python', 'python3']
-  : ['python3', '/usr/bin/python3', '/nix/var/nix/profiles/default/bin/python3', 'python'];
+  : ['python3', 'python', '/usr/bin/python3', '/usr/local/bin/python3'];
 
-function spawnPython(candidates) {
-  const cmd = candidates[0];
-  const rest = candidates.slice(1);
-  const proc = spawn(cmd, [path.join(__dirname, 'romanize.py')], {
-    stdio: ['ignore', 'pipe', 'pipe'],
-    env: { ...process.env, PYTHONIOENCODING: 'utf-8' }
+let PYTHON = null;
+
+function findPython(candidates, cb) {
+  if (!candidates.length) { cb(null); return; }
+  const [cmd, ...rest] = candidates;
+  execFile(cmd, ['--version'], (err) => {
+    if (!err) { cb(cmd); }
+    else { findPython(rest, cb); }
   });
-  proc.on('error', err => {
-    if (rest.length > 0) {
-      console.log(`  [INFO] ${cmd} not found, trying ${rest[0]}...`);
-      spawnPython(rest);
-    } else {
-      console.error(`  [ERROR] Could not find Python: ${err.message}`);
-    }
-  });
-  proc.stdout.on('data', d => process.stdout.write(d));
-  proc.stderr.on('data', d => process.stderr.write(d));
-  proc.on('exit', code => {
-    if (code !== null) console.log(`  [WARN] Python exited (${code})`);
-  });
-  return proc;
 }
-const py = spawnPython(PYTHON_CANDIDATES);
 
-async function callPython(name) {
-  return new Promise((resolve, reject) => {
-    const body = JSON.stringify({ name });
-    const req = http.request(
-      { hostname:'localhost', port:PY_PORT, path:'/', method:'POST',
-        headers:{'Content-Type':'application/json','Content-Length':Buffer.byteLength(body)} },
-      res => {
-        let data = '';
-        res.on('data', c => data += c);
-        res.on('end', () => {
-          try { resolve(JSON.parse(data)); }
-          catch(e) { reject(e); }
-        });
-      }
-    );
-    req.on('error', reject);
-    req.write(body); req.end();
-  });
+function callPython(name, cb) {
+  if (!PYTHON) { cb(new Error('Python not found'), null); return; }
+  const input = JSON.stringify({ name });
+  const proc  = execFile(
+    PYTHON,
+    [path.join(__dirname, 'romanize_once.py')],
+    { env: { ...process.env, PYTHONIOENCODING: 'utf-8' }, timeout: 10000 },
+    (err, stdout, stderr) => {
+      if (err) { cb(err, null); return; }
+      try { cb(null, JSON.parse(stdout.trim())); }
+      catch(e) { cb(e, null); }
+    }
+  );
+  proc.stdin.write(input);
+  proc.stdin.end();
 }
 
 // ── HTTP Server ───────────────────────────────────────────────────
-const server = http.createServer(async (req, res) => {
+const server = http.createServer((req, res) => {
   const url = req.url.split('?')[0];
 
-  // CORS preflight
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
 
-  // API: translate name
+  // API
   if (req.method === 'POST' && url === '/api/translate') {
     let body = '';
     req.on('data', c => body += c);
-    req.on('end', async () => {
+    req.on('end', () => {
       try {
         const { name } = JSON.parse(body);
-        let pyResult = null;
-        for (let i = 0; i < 12; i++) {
-          try { pyResult = await callPython(name); break; }
-          catch { await new Promise(r => setTimeout(r, 500)); }
-        }
-        if (!pyResult || !pyResult.ok) throw new Error('Python ยังไม่พร้อม — ลองใหม่อีกครั้ง');
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: true, result: pyResult.result }));
-      } catch(err) {
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: false, error: err.message }));
+        callPython(name, (err, result) => {
+          if (err) {
+            res.writeHead(500, {'Content-Type':'application/json'});
+            res.end(JSON.stringify({ ok: false, error: err.message }));
+          } else {
+            res.writeHead(200, {'Content-Type':'application/json'});
+            res.end(JSON.stringify({ ok: true, result }));
+          }
+        });
+      } catch(e) {
+        res.writeHead(400, {'Content-Type':'application/json'});
+        res.end(JSON.stringify({ ok: false, error: 'Bad request' }));
       }
     });
     return;
@@ -114,16 +95,18 @@ const server = http.createServer(async (req, res) => {
   });
 });
 
-server.listen(PORT, () => {
-  console.log('');
-  console.log('  ================================');
-  console.log('  Thai Fighter Name Translator');
-  console.log('  Claude Cowork v.2');
-  console.log('  ================================');
-  console.log(`  URL: http://localhost:${PORT}`);
-  console.log('  Ctrl+C to stop');
-  console.log('');
-});
+// Start
+findPython(PYTHON_CANDIDATES, (found) => {
+  PYTHON = found;
+  console.log(found ? `  Python: ${found}` : '  WARNING: Python not found');
 
-process.on('SIGINT', () => { py.kill(); process.exit(); });
-process.on('SIGTERM', () => { py.kill(); process.exit(); });
+  server.listen(PORT, () => {
+    console.log('');
+    console.log('  ================================');
+    console.log('  Thai Fighter Name Translator');
+    console.log('  Claude Cowork v.2');
+    console.log('  ================================');
+    console.log(`  URL: http://localhost:${PORT}`);
+    console.log('');
+  });
+});
