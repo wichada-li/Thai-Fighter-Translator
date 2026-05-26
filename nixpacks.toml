@@ -1,8 +1,13 @@
+providers = ["node"]
+
 [phases.setup]
-nixPkgs = ["nodejs_20", "python311"]
+nixPkgs = ["nodejs_20", "python311", "pip"]
 
 [phases.install]
-cmds = ["npm install", "pip install pythainlp --break-system-packages || true"]
+cmds = [
+  "npm install",
+  "pip3 install pythainlp"
+]
 
 [start]
 cmd = "node server.js"
