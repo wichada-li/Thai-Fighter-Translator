@@ -1,0 +1,12 @@
+::powershell
+Get-CimInstance -ClassName Win32_Processor | Select-Object Name, VirtualizationFirmwareEnabled
+
+False
+$target = Get-WmiObject -Namespace root\wmi -Class Lenovo_SetBiosSetting
+$target.SetBiosSetting("KernelDMAProtection,Disable")
+$target.SetBiosSetting("VirtualizationTechnology,Enable")
+$target.SetBiosSetting("VTdFeature,Enable")
+(Get-WmiObject -Namespace root\wmi -Class Lenovo_SaveBiosSettings).SaveBiosSettings()
+
+::Enable Feture
+dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart

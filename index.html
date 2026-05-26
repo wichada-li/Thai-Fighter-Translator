@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thai Fighter Translator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&family=Noto+Serif+Thai:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #f5f3ef;
+  --bg2:      #ffffff;
+  --bg3:      #f0ede8;
+  --line:     #e0dbd4;
+  --line2:    #ccc8c0;
+  --ink:      #1a1714;
+  --ink2:     #4a4640;
+  --ink3:     #9a958e;
+  --gold:     #b8912a;
+  --gold2:    #d4a83a;
+  --gold-bg:  #fdf6e3;
+  --red:      #c0392b;
+  --green:    #2a9d60;
+  --blue:     #2e6da4;
+  --chip-bg:  #edeae4;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 400;
+  min-height: 100vh;
+}
+
+/* ─── NAV ─────────────────────────────── */
+nav {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--line);
+  height: 58px;
+  display: flex;
+  align-items: center;
+  padding: 0 1.75rem;
+  gap: 0.75rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.nav-icon { font-size: 22px; line-height: 1; }
+.nav-title {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+}
+.nav-sep {
+  width: 1px; height: 18px;
+  background: var(--line2);
+  margin: 0 0.25rem;
+}
+.nav-sub {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--ink3);
+}
+.nav-right { margin-left: auto; }
+.nav-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--gold);
+  background: var(--gold-bg);
+  border: 1px solid #e8d5a0;
+  border-radius: 4px;
+  padding: 3px 9px;
+}
+
+/* ─── PAGE ────────────────────────────── */
+.page {
+  max-width: 740px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 6rem;
+}
+
+/* ─── INPUT CARD ──────────────────────── */
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+
+.card-header {
+  padding: 0.85rem 1.25rem 0.75rem;
+  background: var(--bg3);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-header-icon {
+  font-size: 14px;
+  opacity: 0.5;
+}
+.card-header-label {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  color: var(--ink2);
+}
+
+/* The actual input field — clearly a text box */
+.input-field-wrap {
+  margin: 1rem 1.25rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--bg);
+  border: 1.5px solid var(--line2);
+  border-radius: 10px;
+  padding: 0.5rem 0.5rem 0.5rem 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.input-field-wrap:focus-within {
+  border-color: var(--gold2);
+  box-shadow: 0 0 0 3px rgba(212,168,58,0.12);
+}
+.thai-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: 'Noto Serif Thai', serif;
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--ink);
+  padding: 0.4rem 0;
+  min-width: 0;
+}
+.thai-input::placeholder {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  color: var(--ink3);
+}
+.translate-btn {
+  background: var(--ink);
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  padding: 0.65rem 1.25rem;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.15s, transform 0.1s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.translate-btn:hover { background: #2a2a2a; transform: scale(1.02); }
+.translate-btn:active { transform: scale(0.98); }
+.translate-btn:disabled { background: var(--line2); cursor: not-allowed; transform: none; }
+.translate-btn svg { width: 14px; height: 14px; opacity: 0.7; }
+
+/* chips */
+.chips-area {
+  padding: 0.85rem 1.25rem 1.1rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 0.75rem;
+}
+.chips-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink3);
+  margin-right: 2px;
+  white-space: nowrap;
+}
+.chip {
+  background: var(--chip-bg);
+  border: 1px solid var(--line);
+  border-radius: 100px;
+  padding: 4px 12px;
+  font-family: 'Noto Serif Thai', serif;
+  font-size: 13px;
+  color: var(--ink2);
+  cursor: pointer;
+  transition: all 0.15s;
+  line-height: 1.5;
+}
+.chip:hover {
+  background: var(--ink);
+  color: #fff;
+}
+
+/* ─── RESULT CARD ─────────────────────── */
+.result-card {
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-top: 1rem;
+  animation: popIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes popIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.99); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.result-topbar {
+  padding: 0.65rem 1.25rem;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg3);
+}
+.result-topbar-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink3);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.result-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  flex-shrink: 0;
+}
+.copy-btn {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink3);
+  background: var(--bg2);
+  border: 1px solid var(--line2);
+  border-radius: 6px;
+  padding: 3px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.15s;
+}
+.copy-btn:hover { border-color: var(--ink2); color: var(--ink); }
+.copy-btn.ok { border-color: var(--green); color: var(--green); }
+
+.result-body {
+  padding: 1.25rem 1.25rem 1.1rem;
+}
+.result-en {
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(36px, 7vw, 52px);
+  font-weight: 600;
+  line-height: 1.05;
+  color: var(--ink);
+  letter-spacing: -0.025em;
+  word-break: break-word;
+}
+.result-th {
+  font-family: 'Noto Serif Thai', serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--ink3);
+  margin-top: 0.3rem;
+}
+
+/* source badge */
+.source-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 0.85rem;
+  background: var(--bg3);
+  border: 1px solid var(--line);
+  border-radius: 100px;
+  padding: 3px 10px;
+}
+.source-pip {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+}
+.pip-dict    { background: var(--gold2); }
+.pip-csv     { background: var(--blue); }
+.pip-rule    { background: var(--ink3); }
+.pip-english { background: var(--green); }
+.source-badge-text {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink2);
+  letter-spacing: 0.04em;
+}
+
+/* breakdown */
+.breakdown {
+  margin-top: 1.25rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--line);
+}
+.breakdown-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink3);
+  margin-bottom: 0.75rem;
+}
+.breakdown-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+.word-block {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.word-chip {
+  background: var(--chip-bg);
+  border-radius: 8px;
+  padding: 6px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.word-th {
+  font-family: 'Noto Serif Thai', serif;
+  font-size: 11px;
+  color: var(--ink3);
+  line-height: 1.3;
+}
+.word-en {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+.word-arrow {
+  color: var(--ink3);
+  font-size: 13px;
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+/* error */
+.error-card {
+  background: var(--bg2);
+  border: 1px solid #f0c0c0;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  color: var(--red);
+  font-size: 13px;
+  margin-top: 1rem;
+  animation: popIn 0.2s ease;
+}
+
+/* ─── CONVENTION ──────────────────────── */
+.conv-wrap {
+  margin-top: 1.5rem;
+}
+.conv-toggle {
+  width: 100%;
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.85rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: border-color 0.15s, border-radius 0.15s;
+  text-align: left;
+}
+.conv-toggle[aria-expanded="true"] {
+  border-radius: 10px 10px 0 0;
+  border-bottom-color: var(--line);
+}
+.conv-toggle:hover { border-color: var(--line2); }
+.conv-toggle-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.conv-toggle-label::before {
+  content: '📖';
+  font-size: 14px;
+}
+.conv-chevron {
+  font-size: 11px;
+  color: var(--ink3);
+  transition: transform 0.2s;
+}
+.conv-toggle[aria-expanded="true"] .conv-chevron { transform: rotate(180deg); }
+
+.conv-body {
+  display: none;
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+  padding: 1.25rem;
+}
+.conv-body.open { display: block; }
+
+.conv-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem 2.5rem;
+}
+.conv-section-title {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink3);
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--line);
+}
+.conv-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 3px 0;
+  font-size: 13px;
+}
+.conv-th { font-family: 'Noto Serif Thai', serif; color: var(--ink2); }
+.conv-en { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 500; color: var(--gold); }
+
+.conv-divider { height: 1px; background: var(--line); margin: 1rem 0; }
+
+.conv-extras {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem 2.5rem;
+  margin-top: 0;
+}
+.conv-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.conv-pill {
+  background: var(--chip-bg);
+  border-radius: 6px;
+  padding: 3px 9px;
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  font-size: 12px;
+}
+.conv-pill-th { font-family: 'Noto Serif Thai', serif; color: var(--ink2); }
+.conv-pill-en { font-family: 'DM Mono', monospace; font-weight: 500; color: var(--gold); }
+
+/* ─── FOOTER ──────────────────────────── */
+footer {
+  text-align: center;
+  margin-top: 3rem;
+  font-size: 11px;
+  color: var(--ink3);
+  letter-spacing: 0.04em;
+}
+
+@media (max-width: 520px) {
+  .page { padding: 1.25rem 1rem 5rem; }
+  .result-en { font-size: 34px; }
+  .conv-grid, .conv-extras { grid-template-columns: 1fr; }
+  nav { padding: 0 1rem; }
+  .nav-sub { display: none; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="nav-icon">🥊</span>
+  <span class="nav-title">Thai Fighter Translator</span>
+  <div class="nav-sep"></div>
+  <span class="nav-sub">ระบบแปลชื่อนักมวย</span>
+  <div class="nav-right">
+    <span class="nav-tag">TH–ENG</span>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- INPUT CARD -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-header-icon">🔍</span>
+      <span class="card-header-label">พิมพ์ชื่อนักมวยภาษาไทย</span>
+    </div>
+    <div style="padding: 0 0 0.25rem;">
+      <div class="input-field-wrap">
+        <input
+          id="thaiInput"
+          class="thai-input"
+          type="text"
+          placeholder="เช่น  บัวขาว บัญชาเมฆ  ·  เพชรสมุทร"
+          autocomplete="off" spellcheck="false" lang="th"
+        >
+        <button class="translate-btn" id="translateBtn" onclick="doTranslate()">
+          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M5 8l4-4 4 4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M9 4v8" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+          แปล
+        </button>
+      </div>
+      <div class="chips-area">
+        <span class="chips-label">ลองใช้:</span>
+        <button class="chip" onclick="se('บัวขาว บัญชาเมฆ')">บัวขาว บัญชาเมฆ</button>
+        <button class="chip" onclick="se('สมรักษ์ คำสิงห์')">สมรักษ์ คำสิงห์</button>
+        <button class="chip" onclick="se('ยอดทอง เสนานุช')">ยอดทอง เสนานุช</button>
+        <button class="chip" onclick="se('แสงชัย ส.คิงสตาร์')">แสงชัย ส.คิงสตาร์</button>
+        <button class="chip" onclick="se('เพชรสมุทร')">เพชรสมุทร</button>
+        <button class="chip" onclick="se('มงคลกิตติ์')">มงคลกิตติ์</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div id="resultArea"></div>
+
+  <!-- CONVENTION -->
+  <div class="conv-wrap">
+    <button class="conv-toggle" id="convToggle" onclick="toggleConv()" aria-expanded="false">
+      <span class="conv-toggle-label">Convention Reference — พยัญชนะ / สระ / กฎ</span>
+      <span class="conv-chevron">▼</span>
+    </button>
+    <div class="conv-body" id="convBody">
+      <div class="conv-grid">
+        <div>
+          <div class="conv-section-title">พยัญชนะต้น · Initial</div>
+          <div class="conv-row"><span class="conv-th">ก</span><span class="conv-en">K</span></div>
+          <div class="conv-row"><span class="conv-th">ข ค ฆ</span><span class="conv-en">Kh</span></div>
+          <div class="conv-row"><span class="conv-th">ง</span><span class="conv-en">Ng</span></div>
+          <div class="conv-row"><span class="conv-th">จ</span><span class="conv-en">J</span></div>
+          <div class="conv-row"><span class="conv-th">ช ฉ ฌ</span><span class="conv-en">Ch</span></div>
+          <div class="conv-row"><span class="conv-th">ซ ศ ษ ส</span><span class="conv-en">S</span></div>
+          <div class="conv-row"><span class="conv-th">ด ฎ</span><span class="conv-en">D</span></div>
+          <div class="conv-row"><span class="conv-th">ต ฏ</span><span class="conv-en">T</span></div>
+          <div class="conv-row"><span class="conv-th">ถ ท ธ ฐ</span><span class="conv-en">Th</span></div>
+          <div class="conv-row"><span class="conv-th">น ณ</span><span class="conv-en">N</span></div>
+          <div class="conv-row"><span class="conv-th">บ</span><span class="conv-en">B</span></div>
+          <div class="conv-row"><span class="conv-th">ป</span><span class="conv-en">P</span></div>
+          <div class="conv-row"><span class="conv-th">ผ พ ภ</span><span class="conv-en">Ph</span></div>
+          <div class="conv-row"><span class="conv-th">ฝ ฟ</span><span class="conv-en">F</span></div>
+          <div class="conv-row"><span class="conv-th">ม</span><span class="conv-en">M</span></div>
+          <div class="conv-row"><span class="conv-th">ย ญ</span><span class="conv-en">Y</span></div>
+          <div class="conv-row"><span class="conv-th">ร</span><span class="conv-en">R</span></div>
+          <div class="conv-row"><span class="conv-th">ล ฬ</span><span class="conv-en">L</span></div>
+          <div class="conv-row"><span class="conv-th">ว</span><span class="conv-en">W</span></div>
+          <div class="conv-row"><span class="conv-th">ห ฮ</span><span class="conv-en">H</span></div>
+          <div class="conv-row"><span class="conv-th">อ</span><span class="conv-en">—</span></div>
+        </div>
+        <div>
+          <div class="conv-section-title">พยัญชนะสะกด · Final</div>
+          <div class="conv-row"><span class="conv-th">ก ข ค ฆ</span><span class="conv-en">-k</span></div>
+          <div class="conv-row"><span class="conv-th">ง</span><span class="conv-en">-ng</span></div>
+          <div class="conv-row"><span class="conv-th">จ ช ด ต ท ธ ส</span><span class="conv-en">-t</span></div>
+          <div class="conv-row"><span class="conv-th">น ณ ร ล ญ</span><span class="conv-en">-n</span></div>
+          <div class="conv-row"><span class="conv-th">บ ป พ ภ</span><span class="conv-en">-p</span></div>
+          <div class="conv-row"><span class="conv-th">ม</span><span class="conv-en">-m</span></div>
+          <div class="conv-row"><span class="conv-th">ย</span><span class="conv-en">-i</span></div>
+          <div class="conv-row"><span class="conv-th">ว</span><span class="conv-en">-w</span></div>
+          <div class="conv-row"><span class="conv-th">การันต์ ์</span><span class="conv-en">silent</span></div>
+          <div class="conv-divider"></div>
+          <div class="conv-section-title">สระ · Vowels</div>
+          <div class="conv-row"><span class="conv-th">อา อั</span><span class="conv-en">a</span></div>
+          <div class="conv-row"><span class="conv-th">อิ อี</span><span class="conv-en">i</span></div>
+          <div class="conv-row"><span class="conv-th">อุ อู</span><span class="conv-en">u</span></div>
+          <div class="conv-row"><span class="conv-th">เอ แอ</span><span class="conv-en">e / ae</span></div>
+          <div class="conv-row"><span class="conv-th">โอ เอา</span><span class="conv-en">o</span></div>
+          <div class="conv-row"><span class="conv-th">เอีย เอือ</span><span class="conv-en">ia / ua</span></div>
+          <div class="conv-row"><span class="conv-th">ไ ใ</span><span class="conv-en">ai</span></div>
+          <div class="conv-row"><span class="conv-th">อึ อือ</span><span class="conv-en">ue</span></div>
+          <div class="conv-row"><span class="conv-th">เออ ำ</span><span class="conv-en">oe / am</span></div>
+        </div>
+      </div>
+      <div class="conv-divider"></div>
+      <div class="conv-extras">
+        <div>
+          <div class="conv-section-title">คำนำหน้าค่าย</div>
+          <div class="conv-pills">
+            <div class="conv-pill"><span class="conv-pill-th">ส. ศ.</span><span class="conv-pill-en">Sor.</span></div>
+            <div class="conv-pill"><span class="conv-pill-th">พ.</span><span class="conv-pill-en">Por.</span></div>
+            <div class="conv-pill"><span class="conv-pill-th">ว.</span><span class="conv-pill-en">Wor.</span></div>
+            <div class="conv-pill"><span class="conv-pill-th">จ.</span><span class="conv-pill-en">Jor.</span></div>
+            <div class="conv-pill"><span class="conv-pill-th">ช.</span><span class="conv-pill-en">Chor.</span></div>
+            <div class="conv-pill"><span class="conv-pill-th">อ.</span><span class="conv-pill-en">Or.</span></div>
+          </div>
+        </div>
+        <div>
+          <div class="conv-section-title">กลุ่มพยัญชนะ</div>
+          <div class="conv-pills">
+            <div class="conv-pill"><span class="conv-pill-th">กร</span><span class="conv-pill-en">Kr</span></div>
+            <div class="conv-pill"><span class="conv-pill-th">กล</span><span class="conv-pill-en">Kl</span></div>
+            <div class="conv-pill"><span class="conv-pill-th">พร</span><span class="conv-pill-en">Pr</span></div>
+            <div class="conv-pill"><span class="conv-pill-th">ปล</span><span class="conv-pill-en">Pl</span></div>
+            <div class="conv-pill"><span class="conv-pill-th">ตร</span><span class="conv-pill-en">Tr</span></div>
+            <div class="conv-pill"><span class="conv-pill-th">ทร</span><span class="conv-pill-en">Thr</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>Thai Fighter Translator · TH–ENG Convention · Claude Cowork v.2 · 2,661 Fighters</footer>
+
+<script>
+const SRC = {
+  dict:    { label: 'Fixed Spelling',  pip: 'pip-dict' },
+  csv:     { label: 'Rajadamnern DB',  pip: 'pip-csv' },
+  db:      { label: 'Fighter DB',      pip: 'pip-csv' },
+  rule:    { label: 'Convention Rule', pip: 'pip-rule' },
+  english: { label: 'English',         pip: 'pip-english' },
+};
+
+async function doTranslate() {
+  const input = document.getElementById('thaiInput').value.trim();
+  const area  = document.getElementById('resultArea');
+  const btn   = document.getElementById('translateBtn');
+  if (!input) return;
+
+  btn.disabled = true;
+  btn.innerHTML = '<span style="opacity:.5">⏳</span> กำลังแปล...';
+
+  try {
+    const res  = await fetch('/api/translate', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ name: input }),
+    });
+    const json = await res.json();
+    if (!json.ok) throw new Error(json.error || 'เกิดข้อผิดพลาด');
+
+    const r = json.result;
+
+    // source
+    const methods = [...new Set((r.parts||[]).map(p=>p.method))];
+    const dom = methods.includes('dict')    ? 'dict'
+              : methods.includes('csv')     ? 'csv'
+              : methods.includes('db')      ? 'db'
+              : methods.includes('english') ? 'english' : 'rule';
+    const src = SRC[dom] || SRC.rule;
+
+    // breakdown — arrow-separated chips
+    let bdHtml = '';
+    if (r.parts && r.parts.length > 1) {
+      const blocks = r.parts.map((p, i) => {
+        const arrow = i < r.parts.length - 1 ? '<span class="word-arrow">›</span>' : '';
+        return `<div class="word-block">
+          <div class="word-chip">
+            <span class="word-th">${esc(p.thai)}</span>
+            <span class="word-en">${esc(p.roman)}</span>
+          </div>
+          ${arrow}
+        </div>`;
+      }).join('');
+      bdHtml = `
+        <div class="breakdown">
+          <div class="breakdown-label">การแยกคำ</div>
+          <div class="breakdown-row">${blocks}</div>
+        </div>`;
+    }
+
+    area.innerHTML = `
+      <div class="result-card">
+        <div class="result-topbar">
+          <span class="result-topbar-label">
+            <span class="result-dot"></span>
+            ผลลัพธ์
+          </span>
+          <button class="copy-btn" id="copyBtn"
+            onclick="doCopy('${r.romanized.replace(/'/g,"\\'")}')">
+            คัดลอก
+          </button>
+        </div>
+        <div class="result-body">
+          <div class="result-en">${esc(r.romanized)}</div>
+          <div class="result-th">${esc(input)}</div>
+          <div class="source-badge">
+            <span class="source-pip ${src.pip}"></span>
+            <span class="source-badge-text">${src.label}</span>
+          </div>
+          ${bdHtml}
+        </div>
+      </div>`;
+
+  } catch(e) {
+    area.innerHTML = `<div class="error-card">⚠ ${esc(e.message)}</div>`;
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = `<svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14"><path d="M5 8l4-4 4 4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M9 4v8" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg> แปล`;
+}
+
+function doCopy(t) {
+  const btn = document.getElementById('copyBtn');
+  navigator.clipboard.writeText(t).then(() => {
+    btn.classList.add('ok');
+    btn.textContent = '✓ คัดลอกแล้ว';
+    setTimeout(() => { btn.classList.remove('ok'); btn.textContent = 'คัดลอก'; }, 2000);
+  });
+}
+
+function se(n) {
+  document.getElementById('thaiInput').value = n;
+  doTranslate();
+}
+
+function toggleConv() {
+  const tog  = document.getElementById('convToggle');
+  const body = document.getElementById('convBody');
+  const open = body.classList.toggle('open');
+  tog.setAttribute('aria-expanded', open);
+}
+
+document.getElementById('thaiInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doTranslate();
+});
+
+function esc(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
