@@ -21,16 +21,34 @@ const MIME = {
 };
 
 // ── Spawn Python romanize server ─────────────────────────────────
-const PYTHON  = process.platform === 'win32' ? 'python' : 'python3';
-const py = spawn(PYTHON, [path.join(__dirname, 'romanize.py')], {
-  stdio: ['ignore', 'pipe', 'pipe'],
-  env: { ...process.env, PYTHONIOENCODING: 'utf-8' }
-});
-py.stdout.on('data', d => process.stdout.write(d));
-py.stderr.on('data', d => process.stderr.write(d));
-py.on('exit', code => {
-  if (code !== null) console.log(`  [WARN] Python exited (${code})`);
-});
+// Try different python paths for cross-platform compatibility
+const PYTHON_CANDIDATES = process.platform === 'win32'
+  ? ['python', 'python3']
+  : ['python3', '/usr/bin/python3', '/nix/var/nix/profiles/default/bin/python3', 'python'];
+
+function spawnPython(candidates) {
+  const cmd = candidates[0];
+  const rest = candidates.slice(1);
+  const proc = spawn(cmd, [path.join(__dirname, 'romanize.py')], {
+    stdio: ['ignore', 'pipe', 'pipe'],
+    env: { ...process.env, PYTHONIOENCODING: 'utf-8' }
+  });
+  proc.on('error', err => {
+    if (rest.length > 0) {
+      console.log(`  [INFO] ${cmd} not found, trying ${rest[0]}...`);
+      spawnPython(rest);
+    } else {
+      console.error(`  [ERROR] Could not find Python: ${err.message}`);
+    }
+  });
+  proc.stdout.on('data', d => process.stdout.write(d));
+  proc.stderr.on('data', d => process.stderr.write(d));
+  proc.on('exit', code => {
+    if (code !== null) console.log(`  [WARN] Python exited (${code})`);
+  });
+  return proc;
+}
+const py = spawnPython(PYTHON_CANDIDATES);
 
 async function callPython(name) {
   return new Promise((resolve, reject) => {
