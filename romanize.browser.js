@@ -24,6 +24,7 @@ const OVERRIDE = {
   'เพชรมงกุฎ':'Phetmongkut','มงคล':'Mongkhon','มังกร':'Mangkon',
   'เพชรบุรี':'Phetchaburi','สมุทรปราการ':'Samutprakan',
   'สุราษฎร์':'Surat','สิงห์สุราษฎร์':'Singhasurat',
+  'สมใจ':'Somjai','สมพงษ์':'Somphong',
   'ธนาธร':'Thanathon','พงษ์ภิภัทร':'Phongphiphat','สุพวัต':'Suppawat',
   'วงศ์สถาพร':'Wongsaphat','วงศ์สาทร':'Wongsathon','กิตสะดาพร':'Kitsadaporn',
   'พงศ์ภิภัทร':'Phongphiphat','ณัฐภัทร':'Nattaphat','ณัฐพล':'Nattaphon',
@@ -317,7 +318,7 @@ function romanizeSyllable(chars, i) {
       return [init + 'o', i];
     }
     if (nc === YO_YAK) { i++; return [init + 'ai', i]; }
-    if (nc === NGO_NGU) { i++; return [init + 'ang', i]; }
+    if (nc === NGO_NGU) { i++; return [init + 'ong', i]; }
 
     // CC pattern
     if (isCons(nc)) {
@@ -363,6 +364,20 @@ function romanizeWord(word) {
   if (!word) return ['', 'rule'];
   if (/^[A-Za-z0-9][A-Za-z0-9'\-.]*$/.test(word)) return [word, 'english'];
   if (!/[\u0E00-\u0E7F]/.test(word)) return [word, 'other'];
+
+  // สม- prefix special case (very common in Thai names: สมชาย, สมใจ, สมพงษ์...).
+  // Read as "Som" whenever ม is NOT itself carrying a vowel mark (the ม-has-its-own-vowel
+  // case is the ส-มัย/ส-มัคร "Sa-" pattern, e.g. สมัย -> Samai, สมัคร -> Samak).
+  if (word.length > 2 && word[0] === 'ส' && word[1] === 'ม') {
+    const after = word[2];
+    const vowelOnM = ABOVE_VOWS.has(after) || BELOW_VOWS.has(after) ||
+                      after === MAI_HAN_AKAT || after === SARA_AA || after === SARA_AM;
+    if (!vowelOnM) {
+      const [restRoman] = romanizeWord(word.slice(2));
+      const restLower = restRoman.toLowerCase();
+      return ['Som' + restLower, 'rule'];
+    }
+  }
 
   const parts = [];
   let remaining = word;
