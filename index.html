@@ -626,7 +626,25 @@ footer {
 
 <footer>Thai Fighter Translator · TH–ENG Convention · Claude Cowork v.2 · 2,661 Fighters</footer>
 
+<script src="romanize.browser.js"></script>
 <script>
+let dictsReady = false;
+
+async function loadDicts() {
+  try {
+    const [first, last, csv] = await Promise.all([
+      fetch('first_names.json').then(r => r.json()),
+      fetch('last_names.json').then(r => r.json()),
+      fetch('csv_word_dict.json').then(r => r.json()),
+    ]);
+    Romanizer.init({first, last, csv});
+    dictsReady = true;
+  } catch (e) {
+    console.error('Failed to load dictionaries', e);
+  }
+}
+loadDicts();
+
 const SRC = {
   dict:    { label: 'Fixed Spelling',  pip: 'pip-dict' },
   csv:     { label: 'Rajadamnern DB',  pip: 'pip-csv' },
@@ -645,15 +663,9 @@ async function doTranslate() {
   btn.innerHTML = '<span style="opacity:.5">⏳</span> กำลังแปล...';
 
   try {
-    const res  = await fetch('/api/translate', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ name: input }),
-    });
-    const json = await res.json();
-    if (!json.ok) throw new Error(json.error || 'เกิดข้อผิดพลาด');
-
-    const r = json.result;
+    if (!dictsReady) await loadDicts();
+    const r = Romanizer.translateName(input);
+    if (!r) throw new Error('เกิดข้อผิดพลาด');
 
     // source
     const methods = [...new Set((r.parts||[]).map(p=>p.method))];
